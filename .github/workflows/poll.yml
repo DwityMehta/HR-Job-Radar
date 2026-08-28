@@ -1,0 +1,53 @@
+name: HR Job Radar poll
+
+# Runs every 10 minutes and on demand. GitHub's shortest cron interval is
+# 5 min; real-world firing is usually within a few minutes of schedule.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+# Allow the job to commit the updated seen.json back to the repo.
+permissions:
+  contents: write
+
+# Never run two polls at once.
+concurrency:
+  group: hr-job-radar-poll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run poller
+        env:
+          LOCATION_MODE: ${{ vars.LOCATION_MODE || 'usa' }}
+          INCLUDE_REMOTE: ${{ vars.INCLUDE_REMOTE || 'true' }}
+          MAX_AGE_HOURS: ${{ vars.MAX_AGE_HOURS || '2' }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python poll.py
+
+      - name: Persist seen.json
+        run: |
+          if [ -n "$(git status --porcelain seen.json)" ]; then
+            git config user.name  "hr-job-radar[bot]"
+            git config user.email "actions@users.noreply.github.com"
+            git add seen.json
+            git commit -m "chore: update seen roles [skip ci]"
+            git push
+          else
+            echo "No change to seen.json"
+          fi

@@ -1,0 +1,3 @@
+# Only the dashboard (app.py) needs a dependency.
+# The poller (poll.py) is pure standard library — GitHub Actions needs no installs.
+streamlit>=1.32
