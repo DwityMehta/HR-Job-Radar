@@ -128,11 +128,17 @@ def location_matches(loc: str, mode: str, include_remote: bool) -> bool:
     return False
 
 
+_HR_WORD_RE = re.compile(r"\bhr\b")  # standalone "HR", e.g. "Head of HR"
+
+
 def is_hr_title(title: str) -> bool:
     t = (title or "").lower()
     # Strip "agriculture" so the "culture" pattern doesn't match farm/ag roles.
     t = t.replace("agricultural", "").replace("agriculture", "")
-    return any(p in t for p in HR_TITLE_PATTERNS)
+    if any(p in t for p in HR_TITLE_PATTERNS):
+        return True
+    # Also match "HR" as its own word (won't trigger on "threat", "growth", etc.)
+    return bool(_HR_WORD_RE.search(t))
 
 
 # --------------------------------------------------------------------------
