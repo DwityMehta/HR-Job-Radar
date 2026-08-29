@@ -29,3 +29,25 @@ BOARDS = {
         "runway", "sierra", "suno", "vanta", "watershed", "writer",
     ],
 }
+
+# Workday boards need three pieces each (tenant + data-center + site path),
+# verified to return live postings. Workday only reports day-level dates, so
+# these are filtered to "Posted Today" only (see job_sources.fetch_workday).
+#
+# To add one: open a company's Workday careers page. The URL looks like
+#   https://<TENANT>.<DC>.myworkdayjobs.com/<SITE>
+# e.g. https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+WORKDAY = [
+    {"tenant": "nvidia",     "dc": "wd5",  "site": "NVIDIAExternalCareerSite", "name": "NVIDIA"},
+    {"tenant": "salesforce", "dc": "wd12", "site": "External_Career_Site",     "name": "Salesforce"},
+    {"tenant": "autodesk",   "dc": "wd1",  "site": "Ext",                      "name": "Autodesk"},
+    {"tenant": "paypal",     "dc": "wd1",  "site": "jobs",                     "name": "PayPal"},
+    {"tenant": "ebay",       "dc": "wd5",  "site": "apply",                    "name": "eBay"},
+    {"tenant": "mastercard", "dc": "wd1",  "site": "CorporateCareers",         "name": "Mastercard"},
+    {"tenant": "target",     "dc": "wd5",  "site": "targetcareers",            "name": "Target"},
+    {"tenant": "hp",         "dc": "wd5",  "site": "ExternalCareerSite",       "name": "HP"},
+    {"tenant": "hpe",        "dc": "wd5",  "site": "Jobsathpe",                "name": "HPE"},
+    {"tenant": "kla",        "dc": "wd1",  "site": "Search",                   "name": "KLA"},
+    {"tenant": "gilead",     "dc": "wd1",  "site": "gileadcareers",            "name": "Gilead"},
+    {"tenant": "workday",    "dc": "wd5",  "site": "Workday",                  "name": "Workday"},
+]

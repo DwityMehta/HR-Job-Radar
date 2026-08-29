@@ -74,7 +74,7 @@ else:
         st.markdown(
             f"**[{j['title']}]({j['url']})**  \n"
             f"{j['company']} · {j['location'] or 'location n/a'} · "
-            f"_{age_str(j['posted_ts'], now_ts)}_  \n"
+            f"_{j.get('posted_label') or age_str(j['posted_ts'], now_ts)}_  \n"
             f"<span style='color:gray;font-size:0.8em'>{j['source']}</span>",
             unsafe_allow_html=True,
         )

@@ -21,7 +21,7 @@ import re
 import urllib.request
 from datetime import datetime, timezone
 
-from companies import BOARDS
+from companies import BOARDS, WORKDAY
 
 # --------------------------------------------------------------------------
 # What counts as a Human Resources (HR) / People Operations role.
@@ -46,6 +46,7 @@ HR_TITLE_PATTERNS = [
     "organizational development", "org development",
     "diversity", "inclusion", "dei", "deib",
     "workforce", "workplace experience", "onboarding specialist",
+    "culture",  # People & Culture, Culture Partner, Head of Culture, etc.
 ]
 
 # --------------------------------------------------------------------------
@@ -129,6 +130,8 @@ def location_matches(loc: str, mode: str, include_remote: bool) -> bool:
 
 def is_hr_title(title: str) -> bool:
     t = (title or "").lower()
+    # Strip "agriculture" so the "culture" pattern doesn't match farm/ag roles.
+    t = t.replace("agricultural", "").replace("agriculture", "")
     return any(p in t for p in HR_TITLE_PATTERNS)
 
 
@@ -137,6 +140,17 @@ def is_hr_title(title: str) -> bool:
 # --------------------------------------------------------------------------
 def _get_json(url: str, timeout: int = 15):
     req = urllib.request.Request(url, headers={"User-Agent": "hr-job-radar/1.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
+
+
+def _post_json(url: str, payload: dict, timeout: int = 20):
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, method="POST", headers={
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (hr-job-radar/1.0)",
+    })
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.load(r)
 
@@ -213,6 +227,51 @@ def fetch_ashby(token):
     return out
 
 
+# Workday exposes only relative day-level dates. We treat "Posted Today" as the
+# freshness gate for Workday roles (there is no hour-level data available).
+WORKDAY_SEARCH_TERMS = [
+    "human resources", "recruiter", "talent acquisition", "people operations",
+    "compensation", "employee relations", "hr business partner",
+    "people and culture",
+]
+
+
+def fetch_workday(entry):
+    """entry = {tenant, dc, site, name}. Searches the board for HR terms and
+    returns only roles marked 'Posted Today'. posted_label carries the (coarse)
+    Workday date so it isn't misrepresented as hour-precise elsewhere."""
+    tenant, dc, site = entry["tenant"], entry["dc"], entry["site"]
+    name = entry.get("name") or _title(tenant)
+    base = f"https://{tenant}.{dc}.myworkdayjobs.com"
+    api = f"{base}/wday/cxs/{tenant}/{site}/jobs"
+
+    seen_paths, out = set(), []
+    for term in WORKDAY_SEARCH_TERMS:
+        try:
+            data = _post_json(api, {"limit": 20, "offset": 0,
+                                    "searchText": term, "appliedFacets": {}})
+        except Exception:
+            continue
+        for jp in data.get("jobPostings", []):
+            if (jp.get("postedOn") or "").strip().lower() != "posted today":
+                continue
+            path = jp.get("externalPath", "")
+            if not path or path in seen_paths:
+                continue
+            seen_paths.add(path)
+            out.append({
+                "id": f"workday:{tenant}:{path}",
+                "source": "workday",
+                "company": name,
+                "title": jp.get("title", ""),
+                "location": jp.get("locationsText", ""),
+                "url": f"{base}/{site}{path}",
+                "posted_ts": None,            # no hour-level data from Workday
+                "posted_label": "Posted today",
+            })
+    return out
+
+
 _FETCHERS = {
     "greenhouse": fetch_greenhouse,
     "lever": fetch_lever,
@@ -224,20 +283,28 @@ _FETCHERS = {
 # Top-level: fetch everything, then filter
 # --------------------------------------------------------------------------
 def fetch_all_jobs(max_workers: int = 16):
-    """Fetch every posting from every configured board. Returns (jobs, errors)."""
+    """Fetch every posting from every configured board. Returns (jobs, errors).
+
+    Each task is (label, callable) so Greenhouse/Lever/Ashby tokens and Workday
+    entries can share one thread pool.
+    """
     tasks = []
     for source, tokens in BOARDS.items():
         for token in tokens:
-            tasks.append((source, token))
+            tasks.append((f"{source}:{token}",
+                          lambda s=source, t=token: _FETCHERS[s](t)))
+    for entry in WORKDAY:
+        tasks.append((f"workday:{entry['tenant']}",
+                      lambda e=entry: fetch_workday(e)))
 
     jobs, errors = [], []
 
     def run(task):
-        source, token = task
+        label, fn = task
         try:
-            return (_FETCHERS[source](token), None)
+            return (fn(), None)
         except Exception as e:  # skip a board that 404s / hiccups; keep going
-            return ([], f"{source}:{token} -> {type(e).__name__}")
+            return ([], f"{label} -> {type(e).__name__}")
 
     with cf.ThreadPoolExecutor(max_workers=max_workers) as ex:
         for got, err in ex.map(run, tasks):
@@ -262,7 +329,10 @@ def filter_jobs(jobs, mode="usa", include_remote=True, max_age_hours=None, now_t
             continue
         if not location_matches(j["location"], mode, include_remote):
             continue
-        if max_age_hours is not None:
+        # Workday roles are already gated to "Posted Today" at fetch time and
+        # have no hour-level timestamp, so they bypass the hours window.
+        # Everything else honors the strict freshness window (default 2h).
+        if max_age_hours is not None and j["source"] != "workday":
             if not j["posted_ts"]:
                 continue
             age_hours = (now_ts - j["posted_ts"]) / 3600.0

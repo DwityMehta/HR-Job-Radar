@@ -1,11 +1,18 @@
 # 📡 HR Job Radar
 
-A personal app that watches **Greenhouse, Lever, and Ashby** job boards and
-pings your **phone and email the moment a fresh Human Resources (HR) or People
-Operations role is posted** — anywhere in the **USA** or the **SF Bay Area**.
+A personal app that watches **Greenhouse, Lever, Ashby, and Workday** job boards
+and pings your **phone and email the moment a fresh Human Resources (HR) or
+People Operations role is posted** — anywhere in the **USA** or the **SF Bay
+Area**.
 
-It only alerts you to roles **posted within the last 2 hours**, and never pings
-you about the same role twice.
+Freshness rules by source:
+- **Greenhouse / Lever / Ashby** — only roles **posted within the last 2 hours**
+  (they expose exact posting timestamps).
+- **Workday** — only roles marked **"Posted Today"** (Workday exposes no
+  hour-level date, so day-level is the finest possible).
+
+Either way it de-duplicates by job ID, so it never pings you about the same
+role twice.
 
 > **Built to live entirely on your *personal* accounts** (personal GitHub +
 > personal Gmail + the ntfy app on your phone). It does **not** touch Thumbtack
@@ -121,8 +128,13 @@ If you also want a web page to scroll through matches:
 
 ## Customizing
 
-- **Add companies:** edit `companies.py` — append the board token (the company
-  slug in their `greenhouse.io` / `lever.co` / `ashbyhq.com` careers URL).
+- **Add companies:** edit `companies.py`.
+  - Greenhouse/Lever/Ashby: append the board token (the company slug in their
+    `greenhouse.io` / `lever.co` / `ashbyhq.com` careers URL).
+  - Workday: add an entry to `WORKDAY` with `tenant`, `dc` (e.g. `wd5`), and
+    `site`, all read from the company's `…myworkdayjobs.com/…` URL.
+  - Note: Workday "N Locations" multi-site postings are skipped (the list feed
+    hides the actual cities), so some multi-location Workday roles won't match.
 - **Change what counts as an HR role:** edit `HR_TITLE_PATTERNS` in `job_sources.py`.
 - **USA vs Bay Area / remote:** set the `LOCATION_MODE` and `INCLUDE_REMOTE`
   GitHub *Variables*.

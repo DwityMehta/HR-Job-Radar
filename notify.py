@@ -45,7 +45,8 @@ def send_push(job, now_ts):
     if not topic:
         return False
     server = os.environ.get("NTFY_SERVER", "https://ntfy.sh").rstrip("/")
-    body = f"{job['company']} · {job['location'] or 'location n/a'} · {_age_str(job['posted_ts'], now_ts)}"
+    age = job.get("posted_label") or _age_str(job["posted_ts"], now_ts)
+    body = f"{job['company']} · {job['location'] or 'location n/a'} · {age}"
     req = urllib.request.Request(
         f"{server}/{topic}",
         data=body.encode("utf-8"),
@@ -78,7 +79,7 @@ def send_email_digest(jobs, now_ts):
     lines_txt = []
     lines_html = ['<h2>New People/HR roles</h2><ul>']
     for j in jobs:
-        age = _age_str(j["posted_ts"], now_ts)
+        age = j.get("posted_label") or _age_str(j["posted_ts"], now_ts)
         lines_txt.append(f"• {j['title']} — {j['company']} ({j['location']}) · {age}\n  {j['url']}")
         lines_html.append(
             f'<li><a href="{j["url"]}"><b>{j["title"]}</b></a> — '
