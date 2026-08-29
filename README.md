@@ -1,8 +1,8 @@
 # 📡 HR Job Radar
 
 A personal app that watches **Greenhouse, Lever, and Ashby** job boards and
-pings your **phone and email the moment a fresh People/HR role is posted** —
-anywhere in the **USA** or the **SF Bay Area**.
+pings your **phone and email the moment a fresh Human Resources (HR) or People
+Operations role is posted** — anywhere in the **USA** or the **SF Bay Area**.
 
 It only alerts you to roles **posted within the last 2 hours**, and never pings
 you about the same role twice.

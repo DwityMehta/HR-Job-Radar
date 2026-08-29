@@ -24,7 +24,10 @@ from datetime import datetime, timezone
 from companies import BOARDS
 
 # --------------------------------------------------------------------------
-# What counts as a People / HR role (matched against the job TITLE)
+# What counts as a Human Resources (HR) / People Operations role.
+# "HR" throughout this app means Human Resources — recruiting, talent,
+# people ops, total rewards, employee relations, L&D, DEI, etc.
+# Matched against the job TITLE.
 # --------------------------------------------------------------------------
 HR_TITLE_PATTERNS = [
     "human resources", "people operations", "people ops", "people partner",

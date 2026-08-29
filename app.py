@@ -33,7 +33,8 @@ def age_str(posted_ts, now_ts):
 
 
 st.title("📡 HR Job Radar")
-st.caption("Fresh People & HR roles from Greenhouse, Lever & Ashby boards.")
+st.caption("Fresh Human Resources (HR) & People Operations roles "
+           "from Greenhouse, Lever & Ashby boards.")
 
 with st.sidebar:
     st.header("Filters")
