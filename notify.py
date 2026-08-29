@@ -20,6 +20,17 @@ import urllib.request
 from email.message import EmailMessage
 
 
+def _header_safe(s: str) -> str:
+    """HTTP headers must be latin-1. Normalize common unicode punctuation to
+    ASCII, then replace anything still unencodable so a push never crashes."""
+    for bad, good in (
+        ("’", "'"), ("‘", "'"), ("“", '"'), ("”", '"'),
+        ("–", "-"), ("—", "-"), ("…", "..."), (" ", " "),
+    ):
+        s = s.replace(bad, good)
+    return s.encode("latin-1", "replace").decode("latin-1")
+
+
 def _age_str(posted_ts, now_ts):
     if not posted_ts:
         return "just now"
@@ -39,7 +50,7 @@ def send_push(job, now_ts):
         f"{server}/{topic}",
         data=body.encode("utf-8"),
         headers={
-            "Title": job["title"][:120],
+            "Title": _header_safe(job["title"])[:120],
             "Click": job["url"],          # tap the notification -> opens the posting
             "Tags": "briefcase",
             "Priority": "high",
