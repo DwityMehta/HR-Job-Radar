@@ -41,25 +41,30 @@ def _age_str(posted_ts, now_ts):
 
 
 def send_push(job, now_ts):
-    topic = os.environ.get("NTFY_TOPIC")
-    if not topic:
-        return False
-    server = os.environ.get("NTFY_SERVER", "https://ntfy.sh").rstrip("/")
-    age = job.get("posted_label") or _age_str(job["posted_ts"], now_ts)
-    body = f"{job['company']} · {job['location'] or 'location n/a'} · {age}"
-    req = urllib.request.Request(
-        f"{server}/{topic}",
-        data=body.encode("utf-8"),
-        headers={
-            "Title": _header_safe(job["title"])[:120],
-            "Click": job["url"],          # tap the notification -> opens the posting
-            "Tags": "briefcase",
-            "Priority": "high",
-            "User-Agent": "hr-job-radar/1.0",
-        },
-        method="POST",
-    )
+    # Note: GitHub Actions passes *undefined* secrets as "" (not unset), so use
+    # `or` fallbacks rather than dict defaults. Wrap everything so a bad config
+    # can never crash the poller (which would otherwise loop on the same role).
     try:
+        topic = (os.environ.get("NTFY_TOPIC") or "").strip()
+        if not topic:
+            return False
+        server = (os.environ.get("NTFY_SERVER") or "https://ntfy.sh").strip().rstrip("/")
+        if not server.startswith("http"):
+            server = "https://ntfy.sh"
+        age = job.get("posted_label") or _age_str(job["posted_ts"], now_ts)
+        body = f"{job['company']} · {job['location'] or 'location n/a'} · {age}"
+        req = urllib.request.Request(
+            f"{server}/{topic}",
+            data=body.encode("utf-8"),
+            headers={
+                "Title": _header_safe(job["title"])[:120],
+                "Click": job["url"],      # tap the notification -> opens the posting
+                "Tags": "briefcase",
+                "Priority": "high",
+                "User-Agent": "hr-job-radar/1.0",
+            },
+            method="POST",
+        )
         urllib.request.urlopen(req, timeout=15)
         return True
     except Exception as e:

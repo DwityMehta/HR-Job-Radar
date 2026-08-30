@@ -79,11 +79,16 @@ def main():
 
     if should_notify:
         print(f"  -> {len(new)} NEW role(s); notifying")
-        for j in new:
-            ok = notify.send_push(j, now_ts)
-            print(f"     {'push' if ok else 'log '} | {j['company']}: {j['title']}")
-        if notify.send_email_digest(new, now_ts):
-            print(f"     email digest sent ({len(new)} roles)")
+        # Never let a notification error abort the run before we save state —
+        # otherwise the same roles re-trigger every cycle (a failure loop).
+        try:
+            for j in new:
+                ok = notify.send_push(j, now_ts)
+                print(f"     {'push' if ok else 'log '} | {j['company']}: {j['title']}")
+            if notify.send_email_digest(new, now_ts):
+                print(f"     email digest sent ({len(new)} roles)")
+        except Exception as e:
+            print(f"  ! notification error (continuing): {type(e).__name__}: {e}")
     elif new and first_run:
         print(f"  -> first run: seeded {len(new)} existing role(s) silently "
               f"(set NOTIFY_ON_SEED=true to be pinged on the first run)")
