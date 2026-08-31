@@ -12,7 +12,7 @@
 BOARDS = {
     "greenhouse": [
         "affirm", "airbnb", "airtable", "amplitude", "anthropic", "asana",
-        "betterment", "brex", "calendly", "carta", "chime", "cloudflare",
+        "betterment", "brex", "calendly", "calyxo", "carta", "chime", "cloudflare",
         "coinbase", "cultureamp", "databricks", "datadog", "discord",
         "dropbox", "elastic", "faire", "figma", "flexport", "gitlab",
         "gusto", "instacart", "lattice", "lyft", "mixpanel", "mongodb",
