@@ -1,13 +1,13 @@
 # 📡 HR Job Radar
 
-A personal app that watches **Greenhouse, Lever, Ashby, and Workday** job boards
-and pings your **phone and email the moment a fresh Human Resources (HR) or
-People Operations role is posted** — anywhere in the **USA** or the **SF Bay
-Area**.
+A personal app that watches **Greenhouse, Lever, Ashby, Workday, and Teamtailor**
+job boards and pings your **phone and email the moment a fresh Human Resources
+(HR) or People Operations role is posted** — anywhere in the **USA** or the
+**SF Bay Area**.
 
 Freshness rules by source:
-- **Greenhouse / Lever / Ashby** — only roles **posted within the last 2 hours**
-  (they expose exact posting timestamps).
+- **Greenhouse / Lever / Ashby / Teamtailor** — only roles **posted within the
+  last 2 hours** (they expose exact posting timestamps).
 - **Workday** — only roles marked **"Posted Today"** (Workday exposes no
   hour-level date, so day-level is the finest possible).
 
@@ -135,6 +135,8 @@ If you also want a web page to scroll through matches:
     `site`, all read from the company's `…myworkdayjobs.com/…` URL.
   - Note: Workday "N Locations" multi-site postings are skipped (the list feed
     hides the actual cities), so some multi-location Workday roles won't match.
+  - Teamtailor: add an entry to `TEAMTAILOR` with the careers-site base URL
+    (the part before `/jobs`, e.g. `https://careers.cove.is`).
 - **Change what counts as an HR role:** edit `HR_TITLE_PATTERNS` in `job_sources.py`.
 - **USA vs Bay Area / remote:** set the `LOCATION_MODE` and `INCLUDE_REMOTE`
   GitHub *Variables*.
