@@ -14,13 +14,13 @@ BOARDS = {
         "affirm", "airbnb", "airtable", "amplitude", "anthropic", "asana",
         "betterment", "brex", "calendly", "calyxo", "carta", "chime", "cloudflare",
         "coinbase", "cultureamp", "databricks", "datadog", "discord",
-        "dropbox", "elastic", "faire", "figma", "flexport", "gitlab",
+        "dropbox", "elastic", "faire", "figma", "five9", "flexport", "gitlab",
         "gusto", "instacart", "lattice", "lyft", "mixpanel", "mongodb",
         "nuro", "pinterest", "reddit", "robinhood", "samsara", "scaleai",
         "sofi", "stripe", "twitch", "unchainedlabs", "verkada", "waymo", "webflow",
     ],
     "lever": [
-        "spotify",
+        "spotify", "veeva",
     ],
     "ashby": [
         "abridge", "browserbase", "cursor", "decagon", "elevenlabs",
@@ -49,4 +49,5 @@ WORKDAY = [
     {"tenant": "gilead",     "dc": "wd1",  "site": "gileadcareers",            "name": "Gilead"},
     {"tenant": "workday",    "dc": "wd5",  "site": "Workday",                  "name": "Workday"},
     {"tenant": "thermofisher","dc": "wd5", "site": "ThermoFisherCareers",      "name": "Thermo Fisher"},
+    {"tenant": "chevron",    "dc": "wd5",  "site": "jobs",                     "name": "Chevron"},
 ]
