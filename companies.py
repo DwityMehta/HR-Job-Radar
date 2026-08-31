@@ -51,3 +51,10 @@ WORKDAY = [
     {"tenant": "thermofisher","dc": "wd5", "site": "ThermoFisherCareers",      "name": "Thermo Fisher"},
     {"tenant": "chevron",    "dc": "wd5",  "site": "jobs",                     "name": "Chevron"},
 ]
+
+# Teamtailor boards expose a public JSON Feed at <base>/jobs.json (no key, with
+# real posting timestamps, so these keep the strict 2-hour freshness rule).
+# To add one: use the careers-site base URL (the part before /jobs).
+TEAMTAILOR = [
+    {"base": "https://careers.cove.is", "name": "Cove"},
+]

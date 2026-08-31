@@ -21,7 +21,7 @@ import re
 import urllib.request
 from datetime import datetime, timezone
 
-from companies import BOARDS, WORKDAY
+from companies import BOARDS, WORKDAY, TEAMTAILOR
 
 # --------------------------------------------------------------------------
 # What counts as a Human Resources (HR) / People Operations role.
@@ -278,6 +278,43 @@ def fetch_workday(entry):
     return out
 
 
+def _tt_location(item):
+    """Build a location string from a Teamtailor item's schema.org jobLocation."""
+    jp = item.get("_jobposting") or {}
+    locs = jp.get("jobLocation") or []
+    if isinstance(locs, dict):
+        locs = [locs]
+    parts = []
+    for place in locs:
+        addr = (place or {}).get("address") or {}
+        seg = ", ".join(x for x in (
+            addr.get("addressLocality"), addr.get("addressRegion"),
+            addr.get("addressCountry")) if x)
+        if seg:
+            parts.append(seg)
+    return " | ".join(parts)
+
+
+def fetch_teamtailor(entry):
+    """entry = {base, name}. Teamtailor's public /jobs.json JSON Feed. Has real
+    timestamps (date_published), so these honor the strict freshness window."""
+    base = entry["base"].rstrip("/")
+    name = entry.get("name") or base.split("//")[-1]
+    host = base.split("//")[-1]
+    out = []
+    for it in _get_json(f"{base}/jobs.json").get("items", []):
+        out.append({
+            "id": f"teamtailor:{host}:{it.get('id')}",
+            "source": "teamtailor",
+            "company": name,
+            "title": it.get("title", ""),
+            "location": _tt_location(it),
+            "url": it.get("url", ""),
+            "posted_ts": _parse_iso(it.get("date_published")),
+        })
+    return out
+
+
 _FETCHERS = {
     "greenhouse": fetch_greenhouse,
     "lever": fetch_lever,
@@ -302,6 +339,9 @@ def fetch_all_jobs(max_workers: int = 16):
     for entry in WORKDAY:
         tasks.append((f"workday:{entry['tenant']}",
                       lambda e=entry: fetch_workday(e)))
+    for entry in TEAMTAILOR:
+        tasks.append((f"teamtailor:{entry['name']}",
+                      lambda e=entry: fetch_teamtailor(e)))
 
     jobs, errors = [], []
 
