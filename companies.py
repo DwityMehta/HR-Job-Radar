@@ -12,7 +12,7 @@
 BOARDS = {
     "greenhouse": [
         "affirm", "airbnb", "airtable", "alloy", "amplitude", "anthropic",
-        "asana", "assemblyai", "betterment", "brex", "calendly", "calyxo",
+        "asana", "assemblyai", "atoms", "betterment", "brex", "calendly", "calyxo",
         "carta", "checkr", "chime", "cloudflare", "coinbase", "cresta",
         "cultureamp", "customerio", "databricks", "datadog", "discord",
         "dropbox", "elastic", "faire", "figma", "five9", "flexport", "gitlab",
@@ -20,19 +20,21 @@ BOARDS = {
         "launchdarkly", "lyft", "mattermost", "mercury", "mixpanel", "mongodb",
         "netlify", "nuro", "pinterest", "planetscale", "reddit", "remote",
         "robinhood", "samsara", "scaleai", "sofi", "stripe", "twitch",
-        "unchainedlabs", "vercel", "verkada", "waymo", "webflow",
+        "unchainedlabs", "vercel", "verkada", "waymo", "webflow", "xai",
     ],
     "lever": [
         "cred", "humata", "meesho", "neon", "spotify", "veeva",
+        "verygoodsecurity",
     ],
     "ashby": [
-        "abridge", "airbyte", "baseten", "benchling", "browserbase", "clerk",
-        "column", "crisp", "cursor", "decagon", "docker", "elevenlabs",
+        "abridge", "airbyte", "applied", "baseten", "benchling", "browserbase",
+        "clerk", "column", "crisp", "cursor", "decagon", "docker", "elevenlabs",
         "harvey", "hex", "linear", "mercor", "middesk", "modal", "notion",
         "openai", "openevidence", "oyster", "perplexity", "posthog", "pylon",
         "railway", "ramp", "render", "replit", "resend", "runway", "sentry",
-        "sierra", "suno", "supabase", "temporal", "thumbtack", "uforce",
-        "unit", "vanta", "watershed", "workos", "writer", "zapier", "zip",
+        "sierra", "skymavis", "suno", "supabase", "temporal", "thumbtack",
+        "uforce", "unit", "vanta", "watershed", "workos", "writer", "zapier",
+        "zip",
     ],
 }
 
@@ -62,4 +64,13 @@ WORKDAY = [
 # To add one: use the careers-site base URL (the part before /jobs).
 TEAMTAILOR = [
     {"base": "https://careers.cove.is", "name": "Cove"},
+]
+
+# Eightfold AI career sites expose a public JSON API with real posting
+# timestamps (so these keep the strict 2-hour rule). Each entry needs the
+# Eightfold host and the company's domain.
+# To add one: a company's careers page powered by Eightfold hits
+#   https://<HOST>/api/apply/v2/jobs?domain=<DOMAIN>&...
+EIGHTFOLD = [
+    {"host": "explore.jobs.netflix.net", "domain": "netflix.com", "name": "Netflix"},
 ]

@@ -1,13 +1,13 @@
 # 📡 HR Job Radar
 
-A personal app that watches **Greenhouse, Lever, Ashby, Workday, and Teamtailor**
-job boards and pings your **phone and email the moment a fresh Human Resources
-(HR) or People Operations role is posted** — anywhere in the **USA** or the
-**SF Bay Area**.
+A personal app that watches **Greenhouse, Lever, Ashby, Workday, Teamtailor, and
+Eightfold** job boards and pings your **phone and email the moment a fresh Human
+Resources (HR) or People Operations role is posted** — anywhere in the **USA**
+or the **SF Bay Area**.
 
 Freshness rules by source:
-- **Greenhouse / Lever / Ashby / Teamtailor** — only roles **posted within the
-  last 2 hours** (they expose exact posting timestamps).
+- **Greenhouse / Lever / Ashby / Teamtailor / Eightfold** — only roles **posted
+  within the last 2 hours** (they expose exact posting timestamps).
 - **Workday** — only roles marked **"Posted Today"** (Workday exposes no
   hour-level date, so day-level is the finest possible).
 

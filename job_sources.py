@@ -21,7 +21,9 @@ import re
 import urllib.request
 from datetime import datetime, timezone
 
-from companies import BOARDS, WORKDAY, TEAMTAILOR
+import urllib.parse
+
+from companies import BOARDS, WORKDAY, TEAMTAILOR, EIGHTFOLD
 
 # --------------------------------------------------------------------------
 # What counts as a Human Resources (HR) / People Operations role.
@@ -295,6 +297,39 @@ def _tt_location(item):
     return " | ".join(parts)
 
 
+def fetch_eightfold(entry):
+    """entry = {host, domain, name}. Eightfold's public jobs API. Searches HR
+    terms and returns roles with real timestamps (t_create), so these honor the
+    strict freshness window."""
+    host, domain = entry["host"], entry["domain"]
+    name = entry.get("name") or domain
+    seen, out = set(), []
+    for term in WORKDAY_SEARCH_TERMS:
+        q = urllib.parse.quote(term)
+        url = (f"https://{host}/api/apply/v2/jobs?domain={domain}"
+               f"&start=0&num=20&query={q}&sort_by=timestamp")
+        try:
+            data = _get_json(url)
+        except Exception:
+            continue
+        for p in data.get("positions", []):
+            pid = p.get("id") or p.get("ats_job_id") or p.get("canonicalPositionUrl")
+            if not pid or pid in seen:
+                continue
+            seen.add(pid)
+            ts = p.get("t_create")
+            out.append({
+                "id": f"eightfold:{domain}:{pid}",
+                "source": "eightfold",
+                "company": name,
+                "title": p.get("name", ""),
+                "location": p.get("location", ""),
+                "url": p.get("canonicalPositionUrl", ""),
+                "posted_ts": int(ts) if isinstance(ts, (int, float)) else None,
+            })
+    return out
+
+
 def fetch_teamtailor(entry):
     """entry = {base, name}. Teamtailor's public /jobs.json JSON Feed. Has real
     timestamps (date_published), so these honor the strict freshness window."""
@@ -342,6 +377,9 @@ def fetch_all_jobs(max_workers: int = 16):
     for entry in TEAMTAILOR:
         tasks.append((f"teamtailor:{entry['name']}",
                       lambda e=entry: fetch_teamtailor(e)))
+    for entry in EIGHTFOLD:
+        tasks.append((f"eightfold:{entry['name']}",
+                      lambda e=entry: fetch_eightfold(e)))
 
     jobs, errors = [], []
 
