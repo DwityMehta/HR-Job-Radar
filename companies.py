@@ -17,7 +17,7 @@ BOARDS = {
         "dropbox", "elastic", "faire", "figma", "flexport", "gitlab",
         "gusto", "instacart", "lattice", "lyft", "mixpanel", "mongodb",
         "nuro", "pinterest", "reddit", "robinhood", "samsara", "scaleai",
-        "sofi", "stripe", "twitch", "verkada", "waymo", "webflow",
+        "sofi", "stripe", "twitch", "unchainedlabs", "verkada", "waymo", "webflow",
     ],
     "lever": [
         "spotify",
