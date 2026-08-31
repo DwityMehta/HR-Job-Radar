@@ -26,7 +26,7 @@ BOARDS = {
         "abridge", "browserbase", "cursor", "decagon", "elevenlabs",
         "harvey", "hex", "linear", "mercor", "notion", "openai",
         "openevidence", "perplexity", "posthog", "ramp", "replit",
-        "runway", "sierra", "suno", "vanta", "watershed", "writer",
+        "runway", "sierra", "suno", "uforce", "vanta", "watershed", "writer",
     ],
 }
 
