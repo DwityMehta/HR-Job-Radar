@@ -51,4 +51,5 @@ WORKDAY = [
     {"tenant": "kla",        "dc": "wd1",  "site": "Search",                   "name": "KLA"},
     {"tenant": "gilead",     "dc": "wd1",  "site": "gileadcareers",            "name": "Gilead"},
     {"tenant": "workday",    "dc": "wd5",  "site": "Workday",                  "name": "Workday"},
+    {"tenant": "thermofisher","dc": "wd5", "site": "ThermoFisherCareers",      "name": "Thermo Fisher"},
 ]
