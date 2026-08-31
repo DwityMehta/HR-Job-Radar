@@ -11,23 +11,28 @@
 
 BOARDS = {
     "greenhouse": [
-        "affirm", "airbnb", "airtable", "amplitude", "anthropic", "asana",
-        "betterment", "brex", "calendly", "calyxo", "carta", "chime", "cloudflare",
-        "coinbase", "cultureamp", "databricks", "datadog", "discord",
+        "affirm", "airbnb", "airtable", "alloy", "amplitude", "anthropic",
+        "asana", "assemblyai", "betterment", "brex", "calendly", "calyxo",
+        "carta", "checkr", "chime", "cloudflare", "coinbase", "cresta",
+        "cultureamp", "customerio", "databricks", "datadog", "discord",
         "dropbox", "elastic", "faire", "figma", "five9", "flexport", "gitlab",
-        "gusto", "instacart", "lattice", "lyft", "mixpanel", "mongodb",
-        "nuro", "pinterest", "reddit", "robinhood", "samsara", "scaleai",
-        "sofi", "stripe", "twitch", "unchainedlabs", "verkada", "waymo", "webflow",
+        "groww", "gusto", "instacart", "intercom", "knock", "lattice",
+        "launchdarkly", "lyft", "mattermost", "mercury", "mixpanel", "mongodb",
+        "netlify", "nuro", "pinterest", "planetscale", "reddit", "remote",
+        "robinhood", "samsara", "scaleai", "sofi", "stripe", "twitch",
+        "unchainedlabs", "vercel", "verkada", "waymo", "webflow",
     ],
     "lever": [
-        "spotify", "veeva",
+        "cred", "humata", "meesho", "neon", "spotify", "veeva",
     ],
     "ashby": [
-        "abridge", "browserbase", "cursor", "decagon", "elevenlabs",
-        "harvey", "hex", "linear", "mercor", "notion", "openai",
-        "openevidence", "perplexity", "posthog", "ramp", "replit",
-        "runway", "sierra", "suno", "thumbtack", "uforce", "vanta",
-        "watershed", "writer",
+        "abridge", "airbyte", "baseten", "benchling", "browserbase", "clerk",
+        "column", "crisp", "cursor", "decagon", "docker", "elevenlabs",
+        "harvey", "hex", "linear", "mercor", "middesk", "modal", "notion",
+        "openai", "openevidence", "oyster", "perplexity", "posthog", "pylon",
+        "railway", "ramp", "render", "replit", "resend", "runway", "sentry",
+        "sierra", "suno", "supabase", "temporal", "thumbtack", "uforce",
+        "unit", "vanta", "watershed", "workos", "writer", "zapier", "zip",
     ],
 }
 
