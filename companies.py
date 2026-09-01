@@ -20,7 +20,7 @@ BOARDS = {
         "launchdarkly", "lyft", "mattermost", "mercury", "mixpanel", "mongodb",
         "netlify", "nuro", "pinterest", "planetscale", "reddit", "remote",
         "robinhood", "samsara", "scaleai", "sofi", "stripe", "twitch",
-        "unchainedlabs", "vercel", "verkada", "waymo", "webflow", "xai",
+        "unchainedlabs", "vercel", "verkada", "waymo", "webflow",
     ],
     "lever": [
         "cred", "humata", "meesho", "neon", "spotify", "veeva",
@@ -50,7 +50,6 @@ WORKDAY = [
     {"tenant": "salesforce", "dc": "wd12", "site": "External_Career_Site",     "name": "Salesforce"},
     {"tenant": "autodesk",   "dc": "wd1",  "site": "Ext",                      "name": "Autodesk"},
     {"tenant": "mastercard", "dc": "wd1",  "site": "CorporateCareers",         "name": "Mastercard"},
-    {"tenant": "target",     "dc": "wd5",  "site": "targetcareers",            "name": "Target"},
     {"tenant": "hp",         "dc": "wd5",  "site": "ExternalCareerSite",       "name": "HP"},
     {"tenant": "hpe",        "dc": "wd5",  "site": "Jobsathpe",                "name": "HPE"},
     {"tenant": "gilead",     "dc": "wd1",  "site": "gileadcareers",            "name": "Gilead"},
