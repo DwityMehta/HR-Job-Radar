@@ -40,6 +40,35 @@ def _age_str(posted_ts, now_ts):
     return f"{mins // 60}h {mins % 60}m ago"
 
 
+def age_minutes(job, now_ts):
+    """Minutes since posting, or None when the board gives no real timestamp
+    (Workday only reports day-level dates)."""
+    ts = job.get("posted_ts")
+    if not ts:
+        return None
+    return max(0, (now_ts - ts) / 60.0)
+
+
+# How loud a push is, by how fresh the role is. The goal is to apply inside the
+# first hour, so urgency is graded rather than used to suppress: a stale role
+# still arrives, just quietly, instead of vanishing silently.
+#
+#   < 15 min   urgent  -> pierces Do Not Disturb; drop everything and apply
+#   15-60 min  high    -> still inside the golden hour, normal loud push
+#   > 60 min   low     -> no sound; "you missed the window, apply anyway"
+#   unknown    default -> Workday-style day-level date, can't grade it
+def push_tier(job, now_ts):
+    """-> (tier, ntfy_priority, ntfy_tag)"""
+    mins = age_minutes(job, now_ts)
+    if mins is None:
+        return ("unknown", "default", "briefcase")
+    if mins < 15:
+        return ("hot", "urgent", "rotating_light")
+    if mins < 60:
+        return ("fresh", "high", "briefcase")
+    return ("stale", "low", "hourglass")
+
+
 def send_push(job, now_ts):
     # Note: GitHub Actions passes *undefined* secrets as "" (not unset), so use
     # `or` fallbacks rather than dict defaults. Wrap everything so a bad config
@@ -52,6 +81,7 @@ def send_push(job, now_ts):
         if not server.startswith("http"):
             server = "https://ntfy.sh"
         age = job.get("posted_label") or _age_str(job["posted_ts"], now_ts)
+        tier, priority, tag = push_tier(job, now_ts)
         body = f"{job['company']} · {job['location'] or 'location n/a'} · {age}"
         req = urllib.request.Request(
             f"{server}/{topic}",
@@ -59,8 +89,8 @@ def send_push(job, now_ts):
             headers={
                 "Title": _header_safe(job["title"])[:120],
                 "Click": job["url"],      # tap the notification -> opens the posting
-                "Tags": "briefcase",
-                "Priority": "high",
+                "Tags": tag,
+                "Priority": priority,
                 "User-Agent": "hr-job-radar/1.0",
             },
             method="POST",
@@ -81,20 +111,33 @@ def send_email_digest(jobs, now_ts):
         return False
     port = int(os.environ.get("SMTP_PORT", "587"))
 
+    _MARK = {
+        "hot":     ("[APPLY NOW]", "#b00020"),
+        "fresh":   ("[golden hour]", "#a06000"),
+        "stale":   ("[older]", "#666666"),
+        "unknown": ("[posted today]", "#666666"),
+    }
+
     lines_txt = []
     lines_html = ['<h2>New People/HR roles</h2><ul>']
     for j in jobs:
         age = j.get("posted_label") or _age_str(j["posted_ts"], now_ts)
-        lines_txt.append(f"• {j['title']} — {j['company']} ({j['location']}) · {age}\n  {j['url']}")
+        tier, _, _ = push_tier(j, now_ts)
+        mark, color = _MARK[tier]
+        lines_txt.append(
+            f"• {mark} {j['title']} — {j['company']} ({j['location']}) · {age}\n  {j['url']}")
         lines_html.append(
-            f'<li><a href="{j["url"]}"><b>{j["title"]}</b></a> — '
+            f'<li><span style="color:{color};font-weight:bold">{mark}</span> '
+            f'<a href="{j["url"]}"><b>{j["title"]}</b></a> — '
             f'{j["company"]} <i>({j["location"]})</i> · {age}</li>'
         )
     lines_html.append("</ul>")
 
     msg = EmailMessage()
     n = len(jobs)
-    msg["Subject"] = f"[HR Job Radar] {n} new role{'s' if n != 1 else ''}"
+    hot = sum(1 for j in jobs if push_tier(j, now_ts)[0] in ("hot", "fresh"))
+    urgency = f" — {hot} inside the golden hour" if hot else ""
+    msg["Subject"] = f"[HR Job Radar] {n} new role{'s' if n != 1 else ''}{urgency}"
     msg["From"] = user
     msg["To"] = to
     msg.set_content("\n\n".join(lines_txt))

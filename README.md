@@ -5,14 +5,45 @@ Eightfold** job boards and pings your **phone and email the moment a fresh Human
 Resources (HR) or People Operations role is posted** — anywhere in the **USA**
 or the **SF Bay Area**.
 
-Freshness rules by source:
-- **Greenhouse / Lever / Ashby / Teamtailor / Eightfold** — only roles **posted
-  within the last 2 hours** (they expose exact posting timestamps).
-- **Workday** — only roles marked **"Posted Today"** (Workday exposes no
-  hour-level date, so day-level is the finest possible).
+## Speed, and why urgency is graded rather than filtered
 
-Either way it de-duplicates by job ID, so it never pings you about the same
-role twice.
+The goal is to apply inside the first hour, before a posting collects 100+
+applicants. Two independent things control that:
+
+| Knob | Controls | Setting |
+|---|---|---|
+| **Detection latency** | how fast you *learn* about a role | ~2 min |
+| **Lookback window** | whether you're told *at all* | 24 h (deliberately wide) |
+
+Latency is the knob that protects the goal. The window can't create speed — it
+can only suppress information, and a role that ages out of it is lost silently
+and permanently. So the window stays wide and **urgency lives in the
+notification volume** instead:
+
+| Age when found | Phone push | Meaning |
+|---|---|---|
+| **< 15 min** | `urgent` — pierces Do Not Disturb | drop everything and apply |
+| **15–60 min** | `high` — normal loud push | still inside the golden hour |
+| **> 60 min** | `low` — silent | you missed the window; apply anyway |
+| unknown (Workday) | `default` | day-level date only, can't grade it |
+
+De-duplication by job ID — not the window — is what stops repeat pings, so you
+never hear about the same role twice however wide the window is.
+
+### Why the poller loops internally
+
+GitHub treats `cron` as a *suggestion*. Measured over 300 scheduled runs, a
+`*/10` schedule actually fired **every 29 min on average, with gaps up to 7
+hours** — never once at 10 minutes. That silently lost roles.
+
+So the cron is now only a **watchdog** (`*/30`). The real cadence lives inside
+`poll.py`: one run stays alive ~5h45m and scans every 2 minutes on its own
+clock. Detection latency is set by `POLL_EVERY_SECONDS`, not by GitHub.
+
+> ⚠️ GitHub provides Actions runners for *building software*. A near-continuous
+> scraper is a grey area under their terms — unlikely to be enforced at this
+> scale, but `CLOUDFLARE.md` documents a port to Cloudflare Workers, whose cron
+> is contractually reliable *and* squarely permitted.
 
 > **Built to live entirely on your *personal* accounts** (personal GitHub +
 > personal Gmail + the ntfy app on your phone). It does **not** touch Thumbtack
@@ -25,7 +56,7 @@ role twice.
 
 | Piece | File | What it does |
 |-------|------|--------------|
-| **Auto-poller** | `poll.py` + `.github/workflows/poll.yml` | Runs itself in the cloud every ~10 min, finds new roles, pushes to your phone + emails you. **This is the main app.** |
+| **Auto-poller** | `poll.py` + `.github/workflows/poll.yml` | Lives in the cloud, scans every ~2 min, pushes to your phone + emails you. **This is the main app.** |
 | **Browse dashboard** | `app.py` | Optional mobile web page to see everything at once. |
 | Board list | `companies.py` | The ~64 company boards it scans. Edit to add/remove. |
 | Matching logic | `job_sources.py` | Fetch + People/HR filter + location + freshness. |
@@ -38,7 +69,8 @@ role twice.
 ```bash
 cd hr-job-radar
 python3 poll.py                      # scans all boards, logs matches (no alerts sent yet)
-LOCATION_MODE=bay_area MAX_AGE_HOURS=240 NOTIFY_ON_SEED=true python3 poll.py   # see it find roles
+LOCATION_MODE=bay_area LOOKBACK_HOURS=240 NOTIFY_ON_SEED=true python3 poll.py  # see it find roles
+SEEN_FILE=/tmp/t.json LOOP_FOR_MINUTES=2 POLL_EVERY_SECONDS=30 python3 poll.py # test the loop
 ```
 
 To see the dashboard locally:
@@ -91,7 +123,9 @@ This is the step that makes it independent of Thumbtack.
    - Under **Secrets** (New repository secret): `NTFY_TOPIC`, and if using email:
      `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_TO`.
    - Under **Variables** (optional): `LOCATION_MODE` = `usa` or `bay_area`;
-     `MAX_AGE_HOURS` = `2`.
+     `LOOKBACK_HOURS` = `24`; `POLL_EVERY_SECONDS` = `120`.
+   - ⚠️ If you still have a `MAX_AGE_HOURS` variable from an earlier version,
+     **delete it** — it is no longer read, and leaving it there is misleading.
 5. Go to the **Actions** tab → enable workflows if prompted → click
    **HR Job Radar poll → Run workflow** to test it now.
    - The **first run seeds silently** (learns what's already posted) so you
@@ -99,9 +133,9 @@ This is the step that makes it independent of Thumbtack.
    - To get pinged even on that first run, temporarily add a variable
      `NOTIFY_ON_SEED=true`.
 
-That's it. From now on it wakes up every ~10 minutes on GitHub's servers and
-alerts your phone + inbox — no laptop needed, nothing running on Thumbtack's
-network.
+That's it. From now on a poller stays alive on GitHub's servers scanning every
+~2 minutes, and alerts your phone + inbox — no laptop needed, nothing running
+on Thumbtack's network.
 
 ### Part D · Mobile browse dashboard (optional), ~3 min
 
@@ -140,15 +174,22 @@ If you also want a web page to scroll through matches:
 - **Change what counts as an HR role:** edit `HR_TITLE_PATTERNS` in `job_sources.py`.
 - **USA vs Bay Area / remote:** set the `LOCATION_MODE` and `INCLUDE_REMOTE`
   GitHub *Variables*.
-- **Freshness window:** `MAX_AGE_HOURS` (default `2`).
-- **How often it checks:** the `cron` line in `.github/workflows/poll.yml`
-  (`*/10` = every 10 min; GitHub's minimum is 5).
+- **How often it checks:** `POLL_EVERY_SECONDS` (default `120`). This is the
+  knob that determines how fast you hear about a role. Do *not* change the
+  `cron` line to make it faster — GitHub ignores it (see above).
+- **How far back it looks:** `LOOKBACK_HOURS` (default `24`). Widening this is
+  cheap; narrowing it risks silent misses and buys you nothing.
+- **Push volume:** `PUSH_BURST_CAP` (default `8`) — max phone pushes per scan.
+  Anything over the cap still arrives in the email digest.
 
 ## Good to know
 
-- **Not truly instant:** these boards have no public push feed, so the app polls
-  every ~10 min. You'll hear about a new role within minutes of it going live.
-- **2-hour rule is strict:** anything the boards can't timestamp as fresh is
-  skipped, by design.
-- **Free tiers:** GitHub Actions, ntfy, and Streamlit Community Cloud all cover
-  this easily at personal scale.
+- **Not truly instant:** these boards have no public push feed, so the app
+  polls. At `POLL_EVERY_SECONDS=120` you hear about a role ~2 min after it goes
+  live, comfortably inside the first hour.
+- **Nothing is dropped silently:** every matching role within `LOOKBACK_HOURS`
+  reaches you. Older ones just arrive quietly instead of vanishing.
+- **Workday is coarse:** it publishes only day-level dates, so those roles are
+  gated to "Posted Today" and can't be age-graded.
+- **Free tiers:** GitHub Actions (unlimited on public repos), ntfy, and
+  Streamlit Community Cloud all cover this easily at personal scale.

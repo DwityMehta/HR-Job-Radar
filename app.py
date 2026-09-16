@@ -41,8 +41,10 @@ with st.sidebar:
     mode_label = st.radio("Location", ["USA (nationwide)", "SF Bay Area"], index=0)
     mode = "usa" if mode_label.startswith("USA") else "bay_area"
     include_remote = st.checkbox("Include remote roles", value=True)
-    hours = st.slider("Posted within (hours)", 1, 168, 2,
-                      help="Your notifier uses 2h. Widen here just to browse.")
+    hours = st.slider("Posted within (hours)", 1, 168, 24,
+                      help="Your notifier looks back 24h and grades urgency by "
+                           "age rather than hiding older roles. Change this to "
+                           "browse a different window.")
     if st.button("🔄 Refresh now"):
         load_jobs.clear()
     st.divider()
