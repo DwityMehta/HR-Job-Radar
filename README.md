@@ -40,10 +40,12 @@ So the cron is now only a **watchdog** (`*/30`). The real cadence lives inside
 `poll.py`: one run stays alive ~5h45m and scans every 2 minutes on its own
 clock. Detection latency is set by `POLL_EVERY_SECONDS`, not by GitHub.
 
-> ⚠️ GitHub provides Actions runners for *building software*. A near-continuous
-> scraper is a grey area under their terms — unlikely to be enforced at this
-> scale, but `CLOUDFLARE.md` documents a port to Cloudflare Workers, whose cron
-> is contractually reliable *and* squarely permitted.
+> ⚠️ GitHub provides Actions runners for *building software*, so a
+> near-continuous scraper is a grey area under their terms — unlikely to be
+> enforced at this personal scale, but worth knowing. If it ever becomes a
+> problem, the fix is to move the scheduling to a platform built for it
+> (Cloudflare Workers Cron Triggers, Render, Fly.io) and keep the fetch/filter
+> logic unchanged.
 
 > **Built to live entirely on your *personal* accounts** (personal GitHub +
 > personal Gmail + the ntfy app on your phone). It does **not** touch Thumbtack
