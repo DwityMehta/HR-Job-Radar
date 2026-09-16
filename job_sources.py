@@ -89,6 +89,40 @@ BAY_AREA_TERMS = [
     "silicon valley",
 ]
 
+# Major US cities, for boards that post a bare city with no state ("San
+# Francisco", "Sunnyvale"). Without this, _looks_us rejects them — which was
+# silently dropping ~68 matching roles, 50 of them in SF alone, because nothing
+# in the string looks American to the state-suffix check.
+#
+# Deliberately EXCLUDES names with a large non-US namesake — Cambridge,
+# Birmingham, Manchester, Richmond, Hamilton, Windsor, Victoria, Ontario — since
+# a bare "Cambridge" is as likely to be UK. Those still match when they carry a
+# state ("Cambridge, MA"), so nothing is lost; we just don't guess.
+US_CITY_TERMS = [
+    "new york city", "nyc", "brooklyn", "manhattan", "queens", "bronx",
+    "san francisco", "los angeles", "san diego", "sacramento", "san jose",
+    "santa monica", "santa barbara", "long beach", "anaheim", "irvine",
+    "pasadena", "culver city", "el segundo", "chicago", "houston", "dallas",
+    "fort worth", "austin", "san antonio", "el paso", "plano", "philadelphia",
+    "phoenix", "scottsdale", "tempe", "tucson", "seattle", "bellevue",
+    "redmond", "tacoma", "spokane", "denver", "boulder", "colorado springs",
+    "boston", "somerville", "waltham", "burlington", "atlanta", "alpharetta",
+    "miami", "orlando", "tampa", "jacksonville", "fort lauderdale",
+    "minneapolis", "st. paul", "saint paul", "detroit", "ann arbor",
+    "cleveland", "cincinnati", "columbus", "indianapolis", "milwaukee",
+    "kansas city", "st. louis", "saint louis", "omaha", "des moines",
+    "nashville", "memphis", "knoxville", "louisville", "charlotte", "raleigh",
+    "durham", "chapel hill", "charleston", "savannah", "new orleans",
+    "baton rouge", "oklahoma city", "tulsa", "little rock", "salt lake city",
+    "provo", "las vegas", "reno", "boise", "portland", "eugene", "albuquerque",
+    "santa fe", "pittsburgh", "harrisburg", "baltimore", "annapolis",
+    "bethesda", "rockville", "silver spring", "arlington", "alexandria",
+    "reston", "mclean", "tysons", "washington dc", "washington, d.c.",
+    "hartford", "stamford", "new haven", "providence", "newark", "jersey city",
+    "hoboken", "princeton", "trenton", "albany", "buffalo", "rochester",
+    "syracuse", "white plains", "yonkers", "honolulu", "anchorage",
+]
+
 _ABBR_RE = re.compile(r",\s*([A-Z]{2})(?:\b|,|$)")
 
 
@@ -99,7 +133,13 @@ def _looks_us(loc: str) -> bool:
     for m in _ABBR_RE.finditer(loc):
         if m.group(1) in US_STATE_ABBR:
             return True
-    return any(name in low for name in US_STATE_NAMES)
+    if any(name in low for name in US_STATE_NAMES):
+        return True
+    # Bare-city fallback. Guarded by the non-US check so "Dublin, London" or
+    # "Portland, UK" can't sneak in via a city keyword.
+    if _has_non_us_hint(loc):
+        return False
+    return any(city in low for city in US_CITY_TERMS + BAY_AREA_TERMS)
 
 
 def _is_remote(loc: str) -> bool:
