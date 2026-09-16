@@ -73,3 +73,25 @@ TEAMTAILOR = [
 EIGHTFOLD = [
     {"host": "explore.jobs.netflix.net", "domain": "netflix.com", "name": "Netflix"},
 ]
+
+# SmartRecruiters exposes a public postings API with real timestamps
+# (releasedDate), so these keep the strict freshness grading.
+#
+# Fetched with country=us server-side, which cuts the work dramatically:
+# BoschGroup is 4,828 postings globally but only 327 in the US, so all 10
+# companies below cost just 21 requests instead of ~100.
+#
+# ⚠️ The API's `function=human_resources` facet is SILENTLY IGNORED — it returns
+# everything, plant controllers and warehouse staff included. HR filtering has
+# to happen locally via HR_TITLE_PATTERNS.
+#
+# To add one: find the company on jobs.smartrecruiters.com — the identifier is
+# the first path segment, e.g. jobs.smartrecruiters.com/AveryDennison/...
+# Verify it with:
+#   https://api.smartrecruiters.com/v1/companies/<ID>/postings?country=us&limit=1
+# ⚠️ A wrong identifier returns HTTP 200 with "totalFound": 0 rather than a 404,
+# so confirm the count is non-zero — a typo fails silently and forever.
+SMARTRECRUITERS = [
+    "PublicStorage", "BoschGroup", "AveryDennison", "Continental", "Canva",
+    "Wise", "NielsenIQ", "WTW", "RobertBosch", "Wayfair",
+]

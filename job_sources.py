@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 
 import urllib.parse
 
-from companies import BOARDS, WORKDAY, TEAMTAILOR, EIGHTFOLD
+from companies import BOARDS, WORKDAY, TEAMTAILOR, EIGHTFOLD, SMARTRECRUITERS
 
 # --------------------------------------------------------------------------
 # What counts as a Human Resources (HR) / People Operations role.
@@ -376,6 +376,50 @@ def fetch_eightfold(entry):
     return out
 
 
+# SmartRecruiters returns at most 100 postings per request. Cap the page count
+# so one company with a huge US board can't dominate a scan; 1,000 US postings
+# is far more than any board here (the largest, PublicStorage, has ~660).
+_SR_PAGE = 100
+_SR_MAX_PAGES = 10
+
+
+def fetch_smartrecruiters(token):
+    """SmartRecruiters public postings API, narrowed to country=us server-side.
+
+    releasedDate is a true posting timestamp, so these honor the freshness
+    grading. HR filtering happens locally because the API's `function` facet is
+    silently ignored (see the note in companies.py).
+    """
+    base = f"https://api.smartrecruiters.com/v1/companies/{token}/postings"
+    out, offset = [], 0
+    for _ in range(_SR_MAX_PAGES):
+        data = _get_json(f"{base}?country=us&limit={_SR_PAGE}&offset={offset}")
+        content = data.get("content") or []
+        for p in content:
+            loc = p.get("location") or {}
+            # fullLocation is "City, Region, Country"; assemble it if missing.
+            where = loc.get("fullLocation") or ", ".join(
+                x for x in (loc.get("city"), loc.get("region"),
+                            loc.get("country")) if x)
+            if loc.get("remote"):
+                where = f"{where} (Remote)" if where else "Remote"
+            company = p.get("company") or {}
+            ident = company.get("identifier") or token
+            out.append({
+                "id": f"smartrecruiters:{token}:{p.get('id')}",
+                "source": "smartrecruiters",
+                "company": company.get("name") or _title(token),
+                "title": p.get("name", ""),
+                "location": where,
+                "url": f"https://jobs.smartrecruiters.com/{ident}/{p.get('id')}",
+                "posted_ts": _parse_iso(p.get("releasedDate")),
+            })
+        offset += _SR_PAGE
+        if not content or offset >= (data.get("totalFound") or 0):
+            break
+    return out
+
+
 def fetch_teamtailor(entry):
     """entry = {base, name}. Teamtailor's public /jobs.json JSON Feed. Has real
     timestamps (date_published), so these honor the strict freshness window."""
@@ -426,6 +470,9 @@ def fetch_all_jobs(max_workers: int = 16):
     for entry in EIGHTFOLD:
         tasks.append((f"eightfold:{entry['name']}",
                       lambda e=entry: fetch_eightfold(e)))
+    for token in SMARTRECRUITERS:
+        tasks.append((f"smartrecruiters:{token}",
+                      lambda t=token: fetch_smartrecruiters(t)))
 
     jobs, errors = [], []
 

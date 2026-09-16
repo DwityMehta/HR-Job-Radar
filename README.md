@@ -1,7 +1,7 @@
 # 📡 HR Job Radar
 
-A personal app that watches **Greenhouse, Lever, Ashby, Workday, Teamtailor, and
-Eightfold** job boards and pings your **phone and email the moment a fresh Human
+A personal app that watches **Greenhouse, Lever, Ashby, Workday, SmartRecruiters,
+Teamtailor, and Eightfold** job boards and pings your **phone and email the moment a fresh Human
 Resources (HR) or People Operations role is posted** — anywhere in the **USA**
 or the **SF Bay Area**.
 
@@ -60,7 +60,7 @@ clock. Detection latency is set by `POLL_EVERY_SECONDS`, not by GitHub.
 |-------|------|--------------|
 | **Auto-poller** | `poll.py` + `.github/workflows/poll.yml` | Lives in the cloud, scans every ~2 min, pushes to your phone + emails you. **This is the main app.** |
 | **Browse dashboard** | `app.py` | Optional mobile web page to see everything at once. |
-| Board list | `companies.py` | The ~64 company boards it scans. Edit to add/remove. |
+| Board list | `companies.py` | The ~136 company boards it scans. Edit to add/remove. |
 | Matching logic | `job_sources.py` | Fetch + People/HR filter + location + freshness. |
 | Notifications | `notify.py` | Phone push (ntfy) + email digest. |
 
@@ -173,6 +173,9 @@ If you also want a web page to scroll through matches:
     hides the actual cities), so some multi-location Workday roles won't match.
   - Teamtailor: add an entry to `TEAMTAILOR` with the careers-site base URL
     (the part before `/jobs`, e.g. `https://careers.cove.is`).
+  - SmartRecruiters: append the identifier from `jobs.smartrecruiters.com/<ID>/`.
+    Verify it first — a wrong ID returns HTTP 200 with `totalFound: 0` instead
+    of a 404, so typos fail silently and forever.
 - **Change what counts as an HR role:** edit `HR_TITLE_PATTERNS` in `job_sources.py`.
 - **USA vs Bay Area / remote:** set the `LOCATION_MODE` and `INCLUDE_REMOTE`
   GitHub *Variables*.
