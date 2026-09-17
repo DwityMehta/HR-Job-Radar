@@ -1,4 +1,5 @@
 {
+"ashby:abridge:ef57eeb3-de5a-497d-9b96-2ecd414fffec": 1789684999,
 "ashby:airbyte:5e931ae0-a4ce-4760-88a6-4b875f543fad": 1788377320,
 "ashby:applied:22dea741-d1c8-418d-824f-fc8b5986d799": 1789057378,
 "ashby:docker:e4a8e3e5-3a63-47e7-8ad9-ff51bd99e728": 1788389991,
@@ -48,6 +49,7 @@
 "greenhouse:figma:6191697004": 1789591214,
 "greenhouse:gitlab:8797735002": 1789510818,
 "greenhouse:gusto:8128422": 1788563746,
+"greenhouse:gusto:8168028": 1789684999,
 "greenhouse:gusto:8174849": 1788979582,
 "greenhouse:lyft:8780268002": 1788464439,
 "greenhouse:mercury:6193873004": 1789582094,
@@ -66,6 +68,7 @@
 "greenhouse:waymo:8185814": 1788895333,
 "greenhouse:webflow:8172204": 1788303425,
 "greenhouse:webflow:8187380": 1789581014,
+"lever:spotify:9d1c90b5-a8a4-4218-b2f3-7bbaefae7fd1": 1789684999,
 "workday:chevron:/job/Houston-Texas-United-States-of-America/Strategic-Workforce-Planning-Lead_R000073144": 1788786919,
 "workday:gilead:/job/United-States---California---Foster-City/Intern---Human-Resources---Employee-Growth---Learning-Enablement_R0054519": 1788851922,
 "workday:gilead:/job/United-States---California---Foster-City/Intern---Human-Resources---Employer-Branding---Talent-Attraction_R0054530": 1788851922,
