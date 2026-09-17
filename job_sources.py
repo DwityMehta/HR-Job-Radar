@@ -151,18 +151,45 @@ def _has_non_us_hint(loc: str) -> bool:
     return any(h in low for h in NON_US_HINTS)
 
 
-def location_matches(loc: str, mode: str, include_remote: bool) -> bool:
-    """mode is 'usa' or 'bay_area'."""
+# Boards spell the country inconsistently — "United States", "USA", "us",
+# "U.S." — so compare with dots and spaces stripped.
+_US_COUNTRY_NAMES = {"unitedstates", "unitedstatesofamerica", "usa", "us",
+                     "america"}
+_PUNCT_RE = re.compile(r"[.\s]")
+
+
+def _country_is_us(country: str) -> bool:
+    return bool(country) and _PUNCT_RE.sub("", country).lower() in _US_COUNTRY_NAMES
+
+
+def location_matches(loc: str, mode: str, include_remote: bool,
+                     country: str = None) -> bool:
+    """mode is 'usa' or 'bay_area'.
+
+    `country` is structured country data from the board — Ashby, SmartRecruiters
+    and Teamtailor all publish it. When present it is AUTHORITATIVE, because it
+    settles the cases a location string cannot: "Remote", "North America",
+    "SF Office". Relying on it beats extending the keyword lists forever, since
+    every board invents its own phrasing.
+    """
     if not loc:
         loc = ""
     low = loc.lower()
+    known_us = None
+    if country:
+        known_us = _country_is_us(country)
+        if not known_us:
+            return False        # the board told us it isn't US; believe it
     if mode == "bay_area":
         if any(term in low for term in BAY_AREA_TERMS):
             return True
-        if include_remote and _is_remote(loc) and not _has_non_us_hint(loc):
+        # A US-country remote role can't be disqualified by a stray non-US word.
+        if include_remote and _is_remote(loc) and (known_us or not _has_non_us_hint(loc)):
             return True
         return False
     # usa (nationwide)
+    if known_us:
+        return True
     if _looks_us(loc):
         return True
     if _is_remote(loc):
@@ -229,8 +256,20 @@ def _title(company_token: str) -> str:
     return company_token.replace("-", " ").title()
 
 
+def _slug(token: str) -> str:
+    """Percent-encode a board token for use in a URL path.
+
+    Most tokens are plain slugs where this is a no-op, but some boards use a
+    token containing a space (e.g. the Ashby board "vytalize health"). Without
+    encoding, urllib raises InvalidURL — and because fetch_all_jobs catches
+    per-board errors, such a board would be silently counted as "skipped" and
+    never return a single posting.
+    """
+    return urllib.parse.quote(token, safe="")
+
+
 def fetch_greenhouse(token):
-    url = f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs"
+    url = f"https://boards-api.greenhouse.io/v1/boards/{_slug(token)}/jobs"
     out = []
     for j in _get_json(url).get("jobs", []):
         out.append({
@@ -247,7 +286,7 @@ def fetch_greenhouse(token):
 
 
 def fetch_lever(token):
-    url = f"https://api.lever.co/v0/postings/{token}?mode=json"
+    url = f"https://api.lever.co/v0/postings/{_slug(token)}?mode=json"
     out = []
     for j in _get_json(url):
         cats = j.get("categories") or {}
@@ -266,15 +305,20 @@ def fetch_lever(token):
 
 
 def fetch_ashby(token):
-    url = f"https://api.ashbyhq.com/posting-api/job-board/{token}"
+    url = f"https://api.ashbyhq.com/posting-api/job-board/{_slug(token)}"
     out = []
     for j in _get_json(url).get("jobs", []):
+        # Ashby publishes a structured postal address alongside the free-text
+        # location. The location can be "Remote" or "SF Office" while the
+        # address still names the country, so keep both.
+        addr = (j.get("address") or {}).get("postalAddress") or {}
         out.append({
             "id": f"ashby:{token}:{j.get('id')}",
             "source": "ashby",
             "company": _title(token),
             "title": j.get("title", ""),
             "location": j.get("location", ""),
+            "country": addr.get("addressCountry") or "",
             "url": j.get("jobUrl") or j.get("applyUrl", ""),
             "posted_ts": _parse_iso(j.get("publishedAt")),
         })
@@ -324,6 +368,19 @@ def fetch_workday(entry):
                 "posted_label": "Posted today",
             })
     return out
+
+
+def _tt_country(item):
+    """First addressCountry from a Teamtailor item's schema.org jobLocation."""
+    jp = item.get("_jobposting") or {}
+    locs = jp.get("jobLocation") or []
+    if isinstance(locs, dict):
+        locs = [locs]
+    for place in locs:
+        c = ((place or {}).get("address") or {}).get("addressCountry")
+        if c:
+            return c
+    return ""
 
 
 def _tt_location(item):
@@ -390,7 +447,7 @@ def fetch_smartrecruiters(token):
     grading. HR filtering happens locally because the API's `function` facet is
     silently ignored (see the note in companies.py).
     """
-    base = f"https://api.smartrecruiters.com/v1/companies/{token}/postings"
+    base = f"https://api.smartrecruiters.com/v1/companies/{_slug(token)}/postings"
     out, offset = [], 0
     for _ in range(_SR_MAX_PAGES):
         data = _get_json(f"{base}?country=us&limit={_SR_PAGE}&offset={offset}")
@@ -411,6 +468,7 @@ def fetch_smartrecruiters(token):
                 "company": company.get("name") or _title(token),
                 "title": p.get("name", ""),
                 "location": where,
+                "country": loc.get("country") or "",
                 "url": f"https://jobs.smartrecruiters.com/{ident}/{p.get('id')}",
                 "posted_ts": _parse_iso(p.get("releasedDate")),
             })
@@ -434,6 +492,7 @@ def fetch_teamtailor(entry):
             "company": name,
             "title": it.get("title", ""),
             "location": _tt_location(it),
+            "country": _tt_country(it),
             "url": it.get("url", ""),
             "posted_ts": _parse_iso(it.get("date_published")),
         })
@@ -504,7 +563,8 @@ def filter_jobs(jobs, mode="usa", include_remote=True, max_age_hours=None, now_t
     for j in jobs:
         if not is_hr_title(j["title"]):
             continue
-        if not location_matches(j["location"], mode, include_remote):
+        if not location_matches(j["location"], mode, include_remote,
+                                j.get("country")):
             continue
         # Workday roles are already gated to "Posted Today" at fetch time and
         # have no hour-level timestamp, so they bypass the hours window.
