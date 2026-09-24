@@ -1,6 +1,7 @@
 {
 "ashby:abridge:ef57eeb3-de5a-497d-9b96-2ecd414fffec": 1789684999,
 "ashby:airbyte:5e931ae0-a4ce-4760-88a6-4b875f543fad": 1788377320,
+"ashby:applied:051fcfa1-89c3-4ac0-a1d8-3168ca655b45": 1790287969,
 "ashby:applied:22dea741-d1c8-418d-824f-fc8b5986d799": 1789057378,
 "ashby:applied:33f86ea0-2506-4f7a-93c0-81086bbcf7e4": 1790097713,
 "ashby:applied:e10dc74a-12f8-42a3-94db-cf7e7ace9f61": 1790097593,
@@ -49,6 +50,7 @@
 "greenhouse:atoms:8821327002": 1789748682,
 "greenhouse:atoms:8827954002": 1790030154,
 "greenhouse:atoms:8828047002": 1790125132,
+"greenhouse:atoms:8828049002": 1790287969,
 "greenhouse:atoms:8829616002": 1790034834,
 "greenhouse:atoms:8829620002": 1790034954,
 "greenhouse:atoms:8829622002": 1790035074,
@@ -96,6 +98,7 @@
 "greenhouse:samsara:8130221": 1787967046,
 "greenhouse:sofi:7982474003": 1788282874,
 "greenhouse:stripe:8016504": 1790218138,
+"greenhouse:stripe:8163193": 1790287969,
 "greenhouse:stripe:8167556": 1788379020,
 "greenhouse:stripe:8180390": 1789075236,
 "greenhouse:stripe:8189015": 1790177753,
