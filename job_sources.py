@@ -32,7 +32,7 @@ from companies import BOARDS, WORKDAY, TEAMTAILOR, EIGHTFOLD, SMARTRECRUITERS
 # Matched against the job TITLE.
 # --------------------------------------------------------------------------
 HR_TITLE_PATTERNS = [
-    "human resources", "people operations", "people ops", "people partner",
+  "human resources", "people operations", "people ops", "people partner",
     "people & culture", "people and culture", "people generalist",
     "people coordinator", "people analytics", "people scientist",
     "head of people", "chief people", "vp people", "vp of people",
@@ -40,8 +40,6 @@ HR_TITLE_PATTERNS = [
     "hr business partner", "hrbp", "hr generalist", "hr manager",
     "hr director", "hr coordinator", "hr partner", "hr specialist",
     "hr operations", "hris",
-    "talent acquisition", "talent partner", "talent management",
-    "talent development", "recruiter", "recruiting", "sourcer", "talent sourc",
     "total rewards", "compensation", "benefits",
     "employee relations", "employee experience", "employee engagement",
     "learning and development", "learning & development", "l&d",
@@ -49,6 +47,14 @@ HR_TITLE_PATTERNS = [
     "diversity", "inclusion", "dei", "deib",
     "workforce", "workplace experience", "onboarding specialist",
     "culture",  # People & Culture, Culture Partner, Head of Culture, etc.
+]
+
+# Recruiting-specific terms, kept separate so is_hr_title() does NOT match
+# them. Left here (unused) in case you ever want recruiting alerts back —
+# just add "+ RECRUITING_PATTERNS" inside is_hr_title()'s `any(...)` check.
+RECRUITING_PATTERNS = [
+    "talent acquisition", "talent partner", "talent management",
+    "talent development", "recruiter", "recruiting", "sourcer", "talent sourc",
 ]
 
 # --------------------------------------------------------------------------
@@ -328,9 +334,8 @@ def fetch_ashby(token):
 # Workday exposes only relative day-level dates. We treat "Posted Today" as the
 # freshness gate for Workday roles (there is no hour-level data available).
 WORKDAY_SEARCH_TERMS = [
-    "human resources", "recruiter", "talent acquisition", "people operations",
-    "compensation", "employee relations", "hr business partner",
-    "people and culture",
+   "human resources", "people operations", "compensation",
+    "employee relations", "hr business partner", "people and culture",
 ]
 
 
